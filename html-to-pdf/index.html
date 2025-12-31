@@ -162,7 +162,7 @@
                 <div
                     class="px-3 py-1 bg-slate-950 text-[10px] text-slate-400 border-b border-slate-800 flex justify-between items-center">
                     <span>HTML Input</span>
-                    <button onclick="loadStressTest()" class="text-blue-400 hover:underline cursor-pointer">Load Torture
+                    <button onclick="loadMegaTest()" class="text-blue-400 hover:underline cursor-pointer">Load Ultimate
                         Test</button>
                 </div>
                 <textarea id="htmlInput" class="editor-area flex-1 p-3" spellcheck="false"></textarea>
@@ -199,8 +199,14 @@
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Print Headers</label>
                     <input type="text" id="headerText" placeholder="Top center text..."
                         class="w-full rounded p-1.5 text-xs mb-2">
-                    <input type="text" id="footerText" value="Page [page] of [topage]"
+                    <input type="text" id="footerText" value="Confidential - [page]"
                         class="w-full rounded p-1.5 text-xs">
+                </div>
+                <div class="bg-slate-800 p-2 rounded border border-slate-700">
+                    <p class="text-[10px] text-yellow-400">
+                        <strong>Tip:</strong> In the print dialog, uncheck "Headers and footers" to remove the browser's
+                        default Date/URL.
+                    </p>
                 </div>
                 <button onclick="updatePreview(true)"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded text-xs font-medium">Apply
@@ -235,7 +241,7 @@
         };
 
         window.onload = () => {
-            loadStressTest();
+            loadMegaTest();
             els.htmlInput.addEventListener('input', () => {
                 clearTimeout(state.timer);
                 state.timer = setTimeout(() => updatePreview(), 500);
@@ -250,64 +256,113 @@
             els.panels.config.classList.toggle('hidden', tab !== 'config');
         }
 
-        function loadStressTest() {
+        function loadMegaTest() {
             const template = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <style>
-    @page { size: A4; margin: 20mm; }
-    body { font-family: sans-serif; font-size: 12pt; }
-    .box { border: 1px solid #ccc; margin-bottom: 20px; padding: 15px; background: #f9f9f9; }
-    .no-break { white-space: nowrap; } 
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    td, th { border: 1px solid #000; padding: 8px; }
-    th { background: #eee; }
-    .spacer { height: 220mm; border: 1px dashed #ccc; text-align: center; padding-top: 100px; background: #f0f0f0;}
-    h2 { break-after: avoid; page-break-after: avoid; background: #ddd; }
+    body { font-family: 'Times New Roman', serif; line-height: 1.4; font-size: 11pt; color: #111; }
+    h1 { text-align: center; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+    h2 { background-color: #eee; padding: 5px; border-left: 5px solid #000; margin-top: 20px; page-break-after: avoid; }
+    h3 { border-bottom: 1px solid #ccc; }
+    
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10pt; }
+    th { background-color: #333; color: white; padding: 8px; text-align: left; }
+    td { border: 1px solid #ddd; padding: 8px; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    
+    .page-break { page-break-after: always; }
+    .no-break { page-break-inside: avoid; }
+    
+    .chart-container { border: 1px solid #ccc; padding: 10px; margin: 20px 0; height: 200px; display: flex; align-items: flex-end; justify-content: space-around; }
+    .bar { width: 40px; background-color: #4a90e2; text-align: center; color: white; font-size: 10pt; position: relative; }
+    .bar span { position: absolute; bottom: -20px; left: 0; right: 0; color: black; font-size: 8pt; }
+
+    .col-2 { column-count: 2; column-gap: 20px; text-align: justify; }
 </style>
 </head>
 <body>
-    <h1>Test 1: Overflow Horizontal</h1>
-    <div class="box">
-        <h3>The Infinite URL</h3>
-        <p>This URL should force line breaking, otherwise it will pierce the right margin of the PDF:</p>
-        <p style="word-break: break-all;">https://www.example.com/route/very/long/that/never/ends/and/that/the/user/pasted/from/sharepoint/by/accident?id=123123123123123123123123123123123123123&token=ASDHJASHDJKASHDKJASHDKJASHDKJASHDKJASHDKJASHD&analytics=false&user_role=admin&context=very_long_string_without_spaces_to_test_your_rendering_engine_limits</p>
+
+    <h1>Annual Financial Report</h1>
+    <p style="text-align: center;">Fiscal Year 2024</p>
+    <p><strong>Company:</strong> Acme Corp Global Industries<br><strong>Date:</strong> October 27, 2023</p>
+    
+    <div class="page-break"></div>
+
+    <h2>1. Executive Summary</h2>
+    <p>This document outlines the financial performance and strategic outlook for Acme Corp for the fiscal year 2024. All figures are audited and comply with international accounting standards.</p>
+    
+    <h3>1.1 Key Highlights</h3>
+    <ul>
+        <li>Revenue increased by 15% year-over-year.</li>
+        <li>Operating margin expanded to 22%.</li>
+        <li>Successful launch of the "Project Alpha" initiative.</li>
+        <li>Expansion into three new international markets.</li>
+    </ul>
+
+    <h2>2. Financial Performance (Charts)</h2>
+    <div class="chart-container">
+        <div class="bar" style="height: 40%;">Q1<br><span>40%</span></div>
+        <div class="bar" style="height: 55%;">Q2<br><span>55%</span></div>
+        <div class="bar" style="height: 75%;">Q3<br><span>75%</span></div>
+        <div class="bar" style="height: 95%; background-color: #27ae60;">Q4<br><span>95%</span></div>
     </div>
+    <p style="font-size: 9pt; text-align: center;">Figure 1: Quarterly Revenue Growth</p>
 
-    <div class="spacer">
-        <p>-- SPACE OCCUPIED TO PUSH CONTENT --</p>
-    </div>
+    <div class="page-break"></div>
 
-    <h2>TITLE ORPHAN TEST</h2>
-    <p>This paragraph belongs to the title above. If the title stayed on the previous page and I am here, your system failed.</p>
-
-    <h3>Table Break Test</h3>
-    <p>The table below should break page, but ROWS should NOT be cut in half if possible.</p>
+    <h2>3. Detailed Data Tables</h2>
+    <p>The following table breaks down revenue by region. Note that this table is designed to span multiple pages to test pagination integrity.</p>
+    
     <table>
         <thead>
-            <tr><th>ID</th><th>Description</th><th>Value</th></tr>
+            <tr>
+                <th>Region ID</th>
+                <th>Region Name</th>
+                <th>Manager</th>
+                <th>Q1 Revenue ($M)</th>
+                <th>Q2 Revenue ($M)</th>
+                <th>Q3 Revenue ($M)</th>
+                <th>Q4 Revenue ($M)</th>
+                <th>Total ($M)</th>
+                <th>Growth %</th>
+            </tr>
         </thead>
         <tbody>
-            <tr><td>01</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>02</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>03</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>04</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>05</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>06</td><td>CRITICAL ROW: This row must not be sliced in half by the page break if possible.</td><td>$999.00</td></tr>
-            <tr><td>07</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>08</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>09</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>10</td><td>Row Data</td><td>$10.00</td></tr>
-             <tr><td>11</td><td>Row Data</td><td>$10.00</td></tr>
-            <tr><td>12</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>001</td><td>North America</td><td>J. Doe</td><td>12.5</td><td>13.2</td><td>14.1</td><td>15.0</td><td>54.8</td><td>+12%</td></tr>
+            <tr><td>002</td><td>Europe</td><td>A. Smith</td><td>10.2</td><td>10.8</td><td>11.5</td><td>12.1</td><td>44.6</td><td>+8%</td></tr>
+            <tr><td>003</td><td>Asia Pacific</td><td>K. Tanaka</td><td>8.5</td><td>9.2</td><td>10.0</td><td>11.2</td><td>38.9</td><td>+18%</td></tr>
+            <tr><td>004</td><td>Latin America</td><td>C. Silva</td><td>5.5</td><td>5.8</td><td>6.2</td><td>6.9</td><td>24.4</td><td>+15%</td></tr>
+            <tr><td>005</td><td>Middle East</td><td>F. Al-Fayed</td><td>3.2</td><td>3.5</td><td>3.8</td><td>4.2</td><td>14.7</td><td>+20%</td></tr>
+            <tr><td>006</td><td>Africa</td><td>N. Mandela</td><td>2.1</td><td>2.3</td><td>2.5</td><td>2.8</td><td>9.7</td><td>+10%</td></tr>
+            <tr><td>007</td><td>Oceania</td><td>S. Hogan</td><td>1.8</td><td>1.9</td><td>2.1</td><td>2.4</td><td>8.2</td><td>+12%</td></tr>
+            <tr><td>008</td><td>Virtual Sales</td><td>E. Musk</td><td>15.0</td><td>18.0</td><td>22.0</td><td>25.0</td><td>80.0</td><td>+30%</td></tr>
         </tbody>
     </table>
+
+    <div class="page-break"></div>
+
+    <h2>4. Legal & Compliance (Multi-Column Test)</h2>
+    <div class="col-2">
+        <h3>4.1 Terms of Service</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+        
+        <h3>4.2 Privacy Policy</h3>
+        <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.</p>
+        <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.</p>
+    </div>
+
+    <div style="margin-top: 50px; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 9pt;">
+        <strong>CONFIDENTIAL DOCUMENT</strong><br>
+        This document is intended solely for the use of the individual or entity to whom it is addressed and may contain information that is privileged, confidential and exempt from disclosure under applicable law.
+    </div>
 </body>
 </html>`;
             els.htmlInput.value = template;
             updatePreview();
-            showToast("Stress Test Loaded");
+            showToast("Ultimate Test Loaded");
         }
 
         function updatePreview(msg) {
