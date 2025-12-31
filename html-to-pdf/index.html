@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional PDF Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-area {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            background-color: #1e293b;
+            color: #f8fafc;
+            resize: none;
+            outline: none;
+            border: none;
+        }
+
+        .preview-container {
+            background-color: #334155;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 40px;
+            transform-origin: top center;
+            transition: transform 0.1s ease;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #3b82f6;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            padding: 12px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 40px;
+        }
+
+        input,
+        select,
+        textarea {
+            background-color: #334155;
+            border: 1px solid #475569;
+            color: white;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid #3b82f6;
+            border-color: transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="bg-slate-900 border-b border-slate-700 h-14 flex items-center justify-between px-4 shadow-md z-10">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 p-1.5 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm text-white">PDF<span class="text-blue-400">Forge</span> Pro</h1>
+                <p class="text-[10px] text-slate-400">Native Vector Engine</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center bg-slate-800 rounded border border-slate-700">
+                <button onclick="adjustZoom(-0.1)" class="px-2 py-1 hover:bg-slate-700 text-slate-300"><svg
+                        xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg></button>
+                <span id="zoomLevel" class="text-[10px] font-mono w-10 text-center text-slate-300">80%</span>
+                <button onclick="adjustZoom(0.1)" class="px-2 py-1 hover:bg-slate-700 text-slate-300"><svg
+                        xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg></button>
+            </div>
+            <button onclick="printDocument()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export PDF
+            </button>
+        </div>
+    </header>
+    <main class="flex-1 flex overflow-hidden">
+        <aside class="w-1/3 min-w-[320px] bg-slate-900 border-r border-slate-700 flex flex-col z-10 shadow-xl">
+            <div class="flex border-b border-slate-700">
+                <button onclick="switchTab('code')" id="tab-code"
+                    class="flex-1 py-2 text-[11px] font-medium text-blue-400 border-b-2 border-blue-500 bg-slate-800">Source
+                    Code</button>
+                <button onclick="switchTab('config')" id="tab-config"
+                    class="flex-1 py-2 text-[11px] font-medium text-slate-400 hover:text-white">Settings</button>
+            </div>
+            <div id="panel-code" class="flex-1 flex flex-col">
+                <div
+                    class="px-3 py-1 bg-slate-950 text-[10px] text-slate-400 border-b border-slate-800 flex justify-between items-center">
+                    <span>HTML Input</span>
+                    <button onclick="loadStressTest()" class="text-blue-400 hover:underline cursor-pointer">Load Torture
+                        Test</button>
+                </div>
+                <textarea id="htmlInput" class="editor-area flex-1 p-3" spellcheck="false"></textarea>
+            </div>
+            <div id="panel-config" class="flex-1 p-4 overflow-y-auto hidden space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Page Size</label>
+                    <select id="pageSize" class="w-full rounded p-1.5 text-xs">
+                        <option value="A4">A4 (210 x 297 mm)</option>
+                        <option value="Letter">Letter</option>
+                        <option value="Legal">Legal</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block text-[10px] text-slate-400">Top (mm)</label><input type="number"
+                            id="marginTop" value="15" class="w-full rounded p-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-400">Bottom (mm)</label><input type="number"
+                            id="marginBottom" value="15" class="w-full rounded p-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-400">Left (mm)</label><input type="number"
+                            id="marginLeft" value="15" class="w-full rounded p-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-400">Right (mm)</label><input type="number"
+                            id="marginRight" value="15" class="w-full rounded p-1 text-xs"></div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Typography</label>
+                    <input type="text" id="fontFamily" value="'Times New Roman', serif"
+                        class="w-full rounded p-1.5 text-xs mb-1">
+                    <div class="flex gap-2">
+                        <input type="number" id="fontSize" value="11" class="w-full rounded p-1 text-xs">
+                        <span class="text-xs self-center text-slate-500">pt</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Print Headers</label>
+                    <input type="text" id="headerText" placeholder="Top center text..."
+                        class="w-full rounded p-1.5 text-xs mb-2">
+                    <input type="text" id="footerText" value="Page [page] of [topage]"
+                        class="w-full rounded p-1.5 text-xs">
+                </div>
+                <button onclick="updatePreview(true)"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded text-xs font-medium">Apply
+                    Settings</button>
+            </div>
+        </aside>
+        <section class="flex-1 preview-container bg-slate-800">
+            <iframe id="previewFrame" class="a4-page border-0"></iframe>
+        </section>
+    </main>
+    <div id="toast" class="toast">Action Complete</div>
+    <script>
+        const state = { zoom: 0.8, timer: null };
+        const els = {
+            htmlInput: document.getElementById('htmlInput'),
+            previewFrame: document.getElementById('previewFrame'),
+            zoomLevel: document.getElementById('zoomLevel'),
+            toast: document.getElementById('toast'),
+            tabs: { code: document.getElementById('tab-code'), config: document.getElementById('tab-config') },
+            panels: { code: document.getElementById('panel-code'), config: document.getElementById('panel-config') },
+            settings: {
+                pageSize: document.getElementById('pageSize'),
+                marginTop: document.getElementById('marginTop'),
+                marginBottom: document.getElementById('marginBottom'),
+                marginLeft: document.getElementById('marginLeft'),
+                marginRight: document.getElementById('marginRight'),
+                fontFamily: document.getElementById('fontFamily'),
+                fontSize: document.getElementById('fontSize'),
+                headerText: document.getElementById('headerText'),
+                footerText: document.getElementById('footerText'),
+            }
+        };
+
+        window.onload = () => {
+            loadStressTest();
+            els.htmlInput.addEventListener('input', () => {
+                clearTimeout(state.timer);
+                state.timer = setTimeout(() => updatePreview(), 500);
+            });
+            Object.values(els.settings).forEach(input => input.addEventListener('change', () => updatePreview()));
+        };
+
+        function switchTab(tab) {
+            els.tabs.code.className = tab === 'code' ? 'flex-1 py-2 text-[11px] font-medium text-blue-400 border-b-2 border-blue-500 bg-slate-800' : 'flex-1 py-2 text-[11px] font-medium text-slate-400 hover:text-white';
+            els.tabs.config.className = tab === 'config' ? 'flex-1 py-2 text-[11px] font-medium text-blue-400 border-b-2 border-blue-500 bg-slate-800' : 'flex-1 py-2 text-[11px] font-medium text-slate-400 hover:text-white';
+            els.panels.code.classList.toggle('hidden', tab !== 'code');
+            els.panels.config.classList.toggle('hidden', tab !== 'config');
+        }
+
+        function loadStressTest() {
+            const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    @page { size: A4; margin: 20mm; }
+    body { font-family: sans-serif; font-size: 12pt; }
+    .box { border: 1px solid #ccc; margin-bottom: 20px; padding: 15px; background: #f9f9f9; }
+    .no-break { white-space: nowrap; } 
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    td, th { border: 1px solid #000; padding: 8px; }
+    th { background: #eee; }
+    .spacer { height: 220mm; border: 1px dashed #ccc; text-align: center; padding-top: 100px; background: #f0f0f0;}
+    h2 { break-after: avoid; page-break-after: avoid; background: #ddd; }
+</style>
+</head>
+<body>
+    <h1>Test 1: Overflow Horizontal</h1>
+    <div class="box">
+        <h3>The Infinite URL</h3>
+        <p>This URL should force line breaking, otherwise it will pierce the right margin of the PDF:</p>
+        <p style="word-break: break-all;">https://www.example.com/route/very/long/that/never/ends/and/that/the/user/pasted/from/sharepoint/by/accident?id=123123123123123123123123123123123123123&token=ASDHJASHDJKASHDKJASHDKJASHDKJASHDKJASHDKJASHD&analytics=false&user_role=admin&context=very_long_string_without_spaces_to_test_your_rendering_engine_limits</p>
+    </div>
+
+    <div class="spacer">
+        <p>-- SPACE OCCUPIED TO PUSH CONTENT --</p>
+    </div>
+
+    <h2>TITLE ORPHAN TEST</h2>
+    <p>This paragraph belongs to the title above. If the title stayed on the previous page and I am here, your system failed.</p>
+
+    <h3>Table Break Test</h3>
+    <p>The table below should break page, but ROWS should NOT be cut in half if possible.</p>
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Description</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>01</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>02</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>03</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>04</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>05</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>06</td><td>CRITICAL ROW: This row must not be sliced in half by the page break if possible.</td><td>$999.00</td></tr>
+            <tr><td>07</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>08</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>09</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>10</td><td>Row Data</td><td>$10.00</td></tr>
+             <tr><td>11</td><td>Row Data</td><td>$10.00</td></tr>
+            <tr><td>12</td><td>Row Data</td><td>$10.00</td></tr>
+        </tbody>
+    </table>
+</body>
+</html>`;
+            els.htmlInput.value = template;
+            updatePreview();
+            showToast("Stress Test Loaded");
+        }
+
+        function updatePreview(msg) {
+            const html = els.htmlInput.value;
+            const doc = els.previewFrame.contentDocument || els.previewFrame.contentWindow.document;
+            doc.open();
+            doc.write(html);
+            doc.close();
+
+            const head = doc.head;
+            const style = doc.createElement('style');
+            style.innerHTML = `
+                html, body { margin: 0; padding: 0; height: 100%; }
+                body { 
+                    padding: ${els.settings.marginTop.value}mm ${els.settings.marginRight.value}mm ${els.settings.marginBottom.value}mm ${els.settings.marginLeft.value}mm !important;
+                    box-sizing: border-box !important;
+                    font-family: ${els.settings.fontFamily.value} !important;
+                    font-size: ${els.settings.fontSize.value}pt !important;
+                    background: white;
+                    color: black;
+                }
+            `;
+            head.appendChild(style);
+            if (msg) showToast("Preview Updated");
+        }
+
+        function adjustZoom(delta) {
+            state.zoom = Math.max(0.5, Math.min(1.2, state.zoom + delta));
+            els.zoomLevel.textContent = Math.round(state.zoom * 100) + '%';
+            els.previewFrame.style.transform = `scale(${state.zoom})`;
+        }
+
+        function printDocument() {
+            const html = els.htmlInput.value;
+            const printWindow = window.open('', '_blank');
+
+            if (!printWindow) {
+                alert("Please allow popups to export the PDF.");
+                return;
+            }
+
+            const aggressivePrintCSS = `
+                <style>
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box !important; }
+                    html, body { width: 100% !important; height: auto !important; overflow: visible !important; margin: 0 !important; }
+                    
+                    @page {
+                        size: ${els.settings.pageSize.value};
+                        margin-top: ${els.settings.marginTop.value}mm;
+                        margin-bottom: ${els.settings.marginBottom.value}mm;
+                        margin-left: ${els.settings.marginLeft.value}mm;
+                        margin-right: ${els.settings.marginRight.value}mm;
+                    }
+
+                    body {
+                        font-family: ${els.settings.fontFamily.value} !important;
+                        font-size: ${els.settings.fontSize.value}pt !important;
+                        line-height: 1.4;
+                        color: #000;
+                        background: #fff;
+                        word-wrap: break-word;
+                        overflow-wrap: break-word;
+                    }
+
+                    h1, h2, h3, h4, h5, h6 { break-after: avoid; page-break-after: avoid; break-inside: avoid; page-break-inside: avoid; }
+                    table, thead, tbody, tfoot, tr, td, th, img, svg, pre, blockquote { break-inside: avoid; page-break-inside: avoid; }
+                    tr { page-break-after: auto; page-break-before: auto; }
+                    p, ul, ol, li { orphans: 3; widows: 3; }
+                    
+                    @top-center { content: "${els.settings.headerText.value}"; font-family: sans-serif; font-size: 9pt; color: #555; }
+                    @bottom-center { content: "${els.settings.footerText.value}"; font-family: sans-serif; font-size: 9pt; color: #555; }
+                </style>
+            `;
+
+            const finalHtml = html.replace('</head>', aggressivePrintCSS + '</head>');
+
+            printWindow.document.open();
+            printWindow.document.write(finalHtml);
+            printWindow.document.close();
+
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 500);
+            showToast("Opening Print Dialog...");
+        }
+
+        function showToast(msg) {
+            els.toast.textContent = msg;
+            els.toast.className = "toast show";
+            setTimeout(() => els.toast.className = els.toast.className.replace("show", ""), 3000);
+        }
+    </script>
+</body>
+
+</html>
